@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <fstream>
+#include <time.h>
 #include "Soldado.h"
 #include "SoldadoAsalto.h"
 #include "SoldadoSoporte.h"
@@ -16,6 +17,10 @@ int cargarSoldados(string, vector<Soldado*>&);
 
 //Listar
 void listarEquipo(vector<Soldado*>&);
+
+
+//desplegar soldado
+void desplegarSoldado(Soldado*);
 
 int main(int argc, char** argv) {
 	
@@ -258,7 +263,7 @@ int main(int argc, char** argv) {
 				}
 				
 				if (pEquipo->size() == 0) {
-					cout << "Equipo vacío" << endl;
+					cout << "Equipo vacio" << endl;
 					break;
 				} 
 				
@@ -318,17 +323,96 @@ int main(int argc, char** argv) {
 				
 				cout << leidos1 << " soldados leidos en el equipo 1" << endl;
 				
-				cout << "Size del equipo 1: " << equipo1.size() << endl;
+			//	cout << "Size del equipo 1: " << equipo1.size() << endl;
 				
 				int leidos2 = cargarSoldados("equipo2.bin", equipo2);
 				
 				cout << leidos2 << " soldados leidos en el equipo 2" << endl;
 				
-				cout << "Size del equipo 2: " << equipo2.size() << endl;
+			//	cout << "Size del equipo 2: " << equipo2.size() << endl;
 				
 				break;
 			}
 			case 6: {
+				
+				cout << "***Simulacion***" << endl;
+				
+				srand(time(NULL));
+				
+				bool turno = false;
+				
+				while(true) {
+					
+					turno = !turno;
+					
+					vector<Soldado*> *peAtacante = nullptr;
+					vector<Soldado*> *peDefensor = nullptr;
+					
+					cout << endl;
+					
+					if (turno) {
+						
+						peAtacante = &equipo1;
+						peDefensor = &equipo2;
+						
+						cout << "Ataca equipo 1: " << endl;
+						
+					} else {
+						
+						peAtacante = &equipo2;
+						peDefensor = &equipo1;
+						
+						cout << "Ataca equipo 2: " << endl;
+					}
+					
+					//SOLDADO ATACANTE
+					int indice = rand()%peAtacante->size();
+					
+					Soldado* sAtacante = peAtacante->at(indice);
+					
+					cout << "Soldado atacante: ";
+					
+					desplegarSoldado(sAtacante);
+					
+					//SOLDADO DEFENSOR
+					int indice2 = rand()%peDefensor->size();
+					
+					Soldado* sDefensor = peDefensor->at(indice2);
+					
+					cout << "Soldado defensor: ";
+					
+					desplegarSoldado(sDefensor);
+					
+					int fuerzaAtaque = sAtacante->ataque(sDefensor);
+					
+					int vidaResultante = sDefensor->defensa(fuerzaAtaque,sAtacante);
+					
+					cout << "Ataque realizado con fuerza: " << fuerzaAtaque
+						 << "| vida resultante del defensor: " << vidaResultante << endl;
+						 
+					if(vidaResultante <= 0) {
+						
+						cout << "El soldado defensor ha muerto! " << endl;
+						
+						peDefensor->erase(peDefensor->begin() + indice2);
+						
+						if(peDefensor->size() == 0) {
+							
+							if(turno) {
+								
+								cout << "El equipo 1 ha ganado !" << endl;
+								
+							} else {
+								
+								cout << "El equipo 2 ha ganado !" << endl;
+								
+							}
+							
+							break;
+						}
+					} 
+					
+				}
 				
 				break;
 			}
@@ -412,7 +496,7 @@ int cargarSoldados(string nombreArchivo, vector<Soldado*>& equipo) {
  	
  	while(!file.read( (char*) &tempSize, sizeof(int)).eof()) {
 		
-		cout << "tempSize: " << tempSize << endl;
+		//cout << "tempSize: " << tempSize << endl;
  		// Carga el objeto
  		
  		char* buffer = new char[tempSize+1];
@@ -455,7 +539,7 @@ int cargarSoldados(string nombreArchivo, vector<Soldado*>& equipo) {
 		}
  		
  		count++;
- 		cout << "nombre" << equipo.back()->nombre;
+ 		//cout << "nombre" << equipo.back()->nombre;
 	}
 	
  	file.close();
@@ -467,30 +551,38 @@ void listarEquipo(vector<Soldado*>& equipo) {
 	
 	
 	for(int i = 0; i < equipo.size(); i++) {
-		cout << i << " :: "
-			 << "nombre: " << equipo[i]->nombre 
-			 << " | vida: " << equipo[i]->vida
-			 << " | fuerza: " << equipo[i]->fuerza;
-		
-		if(equipo[i]->getTipo() == "asalto") {
-			
-			SoldadoAsalto *sa = (SoldadoAsalto*) equipo[i];
-			
-			cout << " | velocidad: " << sa->velocidad
-				 << " | fuerza Extra: " << sa->fuerzaE << endl;
-		} else {
-			
-			SoldadoSoporte *ss = (SoldadoSoporte*) equipo[i];
-			
-			cout << " | blindaje: " << ss->blindaje
-				 << " | camuflaje: " << ss->camuflaje << endl;
-		}
+		cout << i << " :: ";
+		desplegarSoldado(equipo[i]);
 	}
 	
 }
 
 
-
+//desplegar soldados
+void desplegarSoldado(Soldado* soldado) {
+	
+	cout << "nombre: " << soldado->nombre 
+		 << " | vida: " << soldado->vida
+		 << " | fuerza: " << soldado->fuerza;
+		
+	if(soldado->getTipo() == "asalto") {
+			
+		SoldadoAsalto *sa = (SoldadoAsalto*) soldado;
+			
+		cout << " | velocidad: " << sa->velocidad
+			 << " | fuerza Extra: " << sa->fuerzaE << endl;
+			 
+	} else {
+			
+		SoldadoSoporte *ss = (SoldadoSoporte*) soldado;
+			
+		cout << " | blindaje: " << ss->blindaje
+			 << " | camuflaje: " << ss->camuflaje << endl;
+			 
+	}
+	
+	
+}
 
 
 
